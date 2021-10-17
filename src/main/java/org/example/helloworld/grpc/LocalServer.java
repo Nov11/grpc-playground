@@ -6,10 +6,11 @@ import io.grpc.stub.StreamObserver;
 import org.example.helloworld.GreeterGrpc;
 import org.example.helloworld.HelloReply;
 import org.example.helloworld.HelloRequest;
-import org.example.helloworld.common.RequestProcessor;
+import org.example.helloworld.common.ServerRequestProcessor;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -19,7 +20,7 @@ public class LocalServer {
     private static class GreeterImpl extends GreeterGrpc.GreeterImplBase {
         @Override
         public void sayHello(HelloRequest request, StreamObserver<HelloReply> responseObserver) {
-            HelloReply reply = RequestProcessor.process(request);
+            HelloReply reply = ServerRequestProcessor.process(request);
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
             logger.info("sayHello replied");
@@ -29,6 +30,7 @@ public class LocalServer {
     public static void main(String[] args) throws IOException, InterruptedException {
         Server server = ServerBuilder.forPort(9999)
                 .addService(new GreeterImpl())
+                .executor(Executors.newFixedThreadPool(6))
                 .build()
                 .start();
 

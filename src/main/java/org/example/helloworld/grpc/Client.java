@@ -2,11 +2,13 @@ package org.example.helloworld.grpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import org.example.helloworld.GreeterGrpc;
 import org.example.helloworld.HelloReply;
 import org.example.helloworld.HelloRequest;
-import org.example.helloworld.common.RequestMaker;
-import org.example.helloworld.common.ResponseProcessor;
+import org.example.helloworld.common.ClientRequestBuilder;
+import org.example.helloworld.common.ClientResponseProcessor;
+import org.example.helloworld.common.HandTriggerRequester;
 import org.slf4j.Logger;
 
 import java.util.Scanner;
@@ -52,38 +54,32 @@ public class Client implements AutoCloseable {
                 // Channels are secure by default (via SSL/TLS). For the example we disable TLS to avoid
                 // needing certificates.
                 .usePlaintext()
-                .executor(Executors.newFixedThreadPool(10))
+                .executor(Executors.newFixedThreadPool(4))
 //                .offloadExecutor(Executors.newFixedThreadPool(10))
                 .build();
+//        channel = NettyChannelBuilder.forAddress("localhost", 9999).usePlaintext().executor(Executors.newFixedThreadPool(4)).build();
         stub = GreeterGrpc.newStub(channel);
     }
 
-    public void parallelRequest(int parallelism) throws ExecutionException, InterruptedException {
-        CompletableFuture<Void>[] all = new CompletableFuture[parallelism];
+    public void parallelRequest(int parallelism) {
+        CompletableFuture<?>[] all = new CompletableFuture[parallelism];
         for (int i = 1; i <= parallelism; i++) {
 
             Ob<HelloReply> ob = new Ob<>();
-            HelloRequest request = RequestMaker.makeRequest(i);
+            HelloRequest request = ClientRequestBuilder.makeRequest(i);
             stub.sayHello(request, ob);
-            all[i - 1] = ob.thenAccept(ResponseProcessor::process);
+            all[i - 1] = ob.thenAccept(ClientResponseProcessor::process);
         }
 
-        CompletableFuture.allOf(all).get();
+        try {
+            CompletableFuture.allOf(all).get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
     }
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
+    public static void main(String[] args) {
         Client client = new Client();
-        Scanner scanner = new Scanner(System.in);
-        logger.info("enter something");
-        while (scanner.hasNext()) {
-            String next = scanner.next();
-            if (next.equals("quit")) {
-                break;
-            }
-            logger.info("issue requests");
-            client.parallelRequest(40);
-            logger.info("received all replies");
-            logger.info("enter something");
-        }
+        HandTriggerRequester.trigger(() -> client.parallelRequest(40));
     }
 }

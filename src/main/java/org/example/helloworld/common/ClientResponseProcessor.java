@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class ResponseProcessor {
-    private static final Logger logger = getLogger(ResponseProcessor.class);
+public class ClientResponseProcessor {
+    private static final Logger logger = getLogger(ClientResponseProcessor.class);
 
     public static void process(HelloReply r) {
         logger.info("id :{}, network delay(client->server): {} process duration: {} network delay(server->client) {}",

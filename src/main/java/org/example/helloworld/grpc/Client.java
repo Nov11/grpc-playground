@@ -47,6 +47,7 @@ public class Client implements AutoCloseable {
 
     public Client() {
         String target = "localhost:9999";
+//        String target = "localhost:8081";
         // Create a communication channel to the server, known as a Channel. Channels are thread-safe
         // and reusable. It is common to create channels at the beginning of your application and reuse
         // them until the application shuts down.

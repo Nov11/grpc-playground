@@ -4,9 +4,9 @@ option java_multiple_files = true;
 option java_package = "org.example.helloworld";
 option java_outer_classname = "HelloWorldProto";
 option objc_class_prefix = "HLW";
+option go_package = "./;hellowold";
 
 package helloworld;
-
 
 // The greeting service definition.
 service Greeter {
@@ -28,4 +28,5 @@ message HelloReply {
   int64 network_delay = 3; // now - request build_time_stamp
   int64 process_duration = 4; // time elapsed between entering SayHello method and making reply object
   int64 replay_time_stamp = 5; // time stamp making replay object
+  bytes large_data = 6;
 }
